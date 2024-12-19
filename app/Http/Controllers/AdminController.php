@@ -14,6 +14,13 @@ class AdminController extends Controller
     // Ambil data pengguna yang sedang login
     $user = User::find($id);
 
+    if (!$user->hasVerifiedEmail()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Your email is already verified.'
+        ], 400);
+    }
+
     // Pastikan hanya admin yang dapat melihat librarian
     if ($user->role !== 'admin') {
         return response()->json([
@@ -47,6 +54,13 @@ public function deleteLibrarian(Request $request, $id)
 {
     // Ambil data pengguna yang sedang login
     $user = User::find($id);
+
+    if (!$user->hasVerifiedEmail()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Your email belum verified'
+        ], 400);
+    }
 
     if (!$user) {
         return response()->json(['message' => 'User not found'], 404);

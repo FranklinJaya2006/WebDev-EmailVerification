@@ -87,6 +87,13 @@ class Library extends Controller
 
         $user = User::find($id);
 
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your email is already verified.'
+            ], 400);
+        }
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
@@ -145,6 +152,13 @@ class Library extends Controller
 
         $user = User::find($id);
 
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your email is already verified.'
+            ], 400);
+        }
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
@@ -201,6 +215,13 @@ class Library extends Controller
         ]);
 
         $user = User::find($id);
+
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your email is already verified.'
+            ], 400);
+        }
 
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -259,6 +280,13 @@ class Library extends Controller
 
         $user = User::find($id);
 
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your email is already verified.'
+            ], 400);
+        }
+
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
@@ -315,6 +343,13 @@ class Library extends Controller
         ]);
 
         $user = User::find($id);
+
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your email is belum verified'
+            ], 400);
+        }
 
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -476,8 +511,6 @@ class Library extends Controller
                 'jml_halaman' => $jurnal->jml_halaman,
             ]
         ], 200);
-
-        return redirect()->route('librarian')->with('success', 'Jurnal berhasil diperbarui!');
     }
 
     // Method untuk menampilkan form edit cd
@@ -660,51 +693,53 @@ class Library extends Controller
     public function deleteBook($id)
     {
         $book = Book::findOrFail($id);
-        if ($book) {
-            $book->delete();
-            return redirect()->route('librarian')->with('success', 'Buku berhasil dihapus.');
-        }
-        return redirect()->route('librarian')->with('error', 'Buku tidak ditemukan.');
+        $book->delete();
+        return response()->json([
+            'status' => true,
+            'message' => 'cd deleted successfully'
+        ], 204);
     }
 
     public function deleteJurnal($id)
     {
         $jurnal = Jurnal::findOrFail($id);
-        if ($jurnal) {
-            $jurnal->delete();
-            return redirect()->route('librarian')->with('success', 'Jurnal berhasil dihapus.');
-        }
-        return redirect()->route('librarian')->with('error', 'Jurnal tidak ditemukan.');
+        $jurnal->delete();
+        return response()->json([
+            'status' => true,
+            'message' => 'cd deleted successfully'
+        ], 204);
     }
 
     public function deleteCd($id)
     {
         $cd = Cd::findOrFail($id);
-        if ($cd) {
-            $cd->delete();
-            return redirect()->route('librarian')->with('success', 'CD berhasil dihapus.');
-        }
-        return redirect()->route('librarian')->with('error', 'CD tidak ditemukan.');
+        $cd->delete();
+        return response()->json([
+            'status' => true,
+            'message' => 'cd deleted successfully'
+        ], 204);
     }
 
     public function deleteNewspaper($id)
     {
         $newspaper = Newspaper::findOrFail($id);
-        if ($newspaper) {
-            $newspaper->delete();
-            return redirect()->route('librarian')->with('success', 'Surat Kabar berhasil dihapus.');
-        }
-        return redirect()->route('librarian')->with('error', 'Surat Kabar tidak ditemukan.');
+        $newspaper->delete();
+        
+        return response()->json([
+            'status' => true,
+            'message' => 'newspaper deleted successfully'
+        ], 204);
     }
 
     public function deleteDvd($id)
     {
         $dvd = Dvd::findOrFail($id);
-        if ($dvd) {
-            $dvd->delete();
-            return redirect()->route('librarian')->with('success', 'DVD berhasil dihapus.');
-        }
-        return redirect()->route('librarian')->with('error', 'DVD tidak ditemukan.');
+        $dvd->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'dvd deleted successfully'
+        ], 204);
     }
 
     public function approveItem($id)

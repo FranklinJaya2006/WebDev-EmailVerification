@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Verified;
 
 class AuthController extends Controller
 {
@@ -34,17 +37,16 @@ class AuthController extends Controller
             'role' => $request->role,
         ]);
 
-        $token = $user->createToken('authToken')->plainTextToken;
-
         // Jika permintaan adalah API
         return response()->json([
             'success' => true,
             'message' => 'Registration successful.',
             'data' => $user,
-            'token' => $token,
             'role' => $user->role,
             'token_type' => 'Bearer',
         ], 201);
+
+        $user->sendEmailVerificationNotification();
     }
 
 
@@ -65,6 +67,16 @@ class AuthController extends Controller
 
         // Ambil user berdasarkan email
         $user = User::where('email', $request->email)->first();
+
+        if (!$user->hasVerifiedEmail()) {
+            // Kirimkan ulang email verifikasi jika belum diverifikasi
+            $user->sendEmailVerificationNotification();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Please verify your email before logging in. A new verification link has been sent.',
+            ], 403);
+        }
 
         // Jika user tidak ditemukan atau password salah
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -97,7 +109,7 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'token_type' => 'Bearer',
             'user' => [
-                'id_pengguna' => $user->id,  // Assuming `id` is the correct column for user_id
+                'id_pengguna' => $user->id_pengguna,  // Assuming `id` is the correct column for user_id
                 'name' => $user->name,
                 'email' => $user->email,
                 'role_message' => $roleMessage,  // Menambahkan pesan berdasarkan role
@@ -106,15 +118,6 @@ class AuthController extends Controller
                 'token' => $token,
             ],
         ], 200);
-
-        // Untuk login via browser
-        if ($user->role === 'admin') {
-            return redirect()->route('admin')->with('message', $roleMessage);
-        } elseif ($user->role === 'librarian') {
-            return redirect()->route('librarian')->with('message', $roleMessage);
-        }
-
-        return redirect()->back()->withErrors('Invalid credentials.');
     }
 
     // Logout User
@@ -129,4 +132,36 @@ class AuthController extends Controller
         ]);
     }
 
+    public function verifyEmail(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email has already been verified.'
+            ], 400);
+        }
+
+        $user->markEmailAsVerified();
+        event(new Verified($user));  // Menambahkan event Verified
+
+        // Jika berhasil verifikasi email, tampilkan pesan sukses
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Email successfully verified.'
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Email successfully verified.'
+        ], 200);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid verification link.'
+        ], 400);
+    }
 }

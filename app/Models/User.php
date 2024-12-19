@@ -7,8 +7,12 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Route;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
@@ -41,6 +45,19 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        // Daftarkan rute verifikasi email
+        VerifyEmail::createUrlUsing(function ($notifiable, $url) {
+            return (new MailMessage)
+                ->subject('Verify Email Address')
+                ->line('Click the button below to verify your email address.')
+                ->action('Verify Email Address', $url);
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
